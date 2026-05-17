@@ -11,29 +11,29 @@ Below is a visual overview of the agent system running in n8n:
 ### 1. Inbound Leads Outreach Flow
 This workflow triggers automatically when a new lead is added to the Google Sheet leads database. It retrieves calendar availability, determines free slots, and writes a highly personalized introduction.
 
-![Inbound Outreach Workflow](screenshots/Screenshot%202026-03-09%20at%2012.44.44%20PM.png)
+![Inbound Outreach Workflow](screenshots/outreach_workflow.png)
 
 ---
 
 ### 2. Conversational Intent & Reply Intelligence Flow
 The core decision engine of our inbound sales rep. It intercepts new Gmail replies, retrieves context from a PostgreSQL database, classifies intent, and branches accordingly.
 
-![Reply Intelligence & Scheduling Flow](screenshots/Screenshot%202026-03-09%20at%2012.48.04%20PM.png)
+![Reply Intelligence & Scheduling Flow](screenshots/reply_intelligence_workflow.png)
 
 ---
 
 ### 3. Real-time Scheduling and Calendar Engine
 Visual mapping of the Google Calendar node verifying calendar slots and booking discovery calls with a Google Meet link automatically attached.
 
-![Calendar Node Mapping](screenshots/Screenshot%202026-03-09%20at%2012.45.24%20PM.png)
+![Calendar Node Mapping](screenshots/calendar_scheduling.png)
 
 ---
 
 ### 4. LangChain Chat Memory and PostgreSQL Store
 Demonstrates how the agent stores, manages, and retrieves past interactions using memory managers to ensure it always remembers previous discussions with leads.
 
-![Chat Memory Nodes](screenshots/Screenshot%202026-03-09%20at%2012.49.00%20PM.png)
-![PostgreSQL Session Store](screenshots/Screenshot%202026-03-09%20at%2012.49.53%20PM.png)
+![Chat Memory Nodes](screenshots/chat_memory.png)
+![PostgreSQL Session Store](screenshots/postgres_store.png)
 
 ---
 
@@ -71,12 +71,12 @@ Demonstrates how the agent stores, manages, and retrieves past interactions usin
 ├── ai_agents/                   # Placeholder for additional agents
 │   └── lead_generation_agent/   
 ├── customer_support/            # Placeholder for customer support pipelines
-├── screenshots/                 # Workflow walkthough screenshots
-│   ├── Screenshot...12.44.44.png
-│   ├── Screenshot...12.45.24.png
-│   ├── Screenshot...12.48.04.png
-│   ├── Screenshot...12.49.00.png
-│   └── Screenshot...12.49.53.png
+├── screenshots/                 # Workflow walkthrough screenshots
+│   ├── outreach_workflow.png
+│   ├── reply_intelligence_workflow.png
+│   ├── calendar_scheduling.png
+│   ├── chat_memory.png
+│   └── postgres_store.png
 ├── sdr/
 │   └── n8n/
 │       ├── prompts to gemini/   # Raw prompt structures used by LLMs
