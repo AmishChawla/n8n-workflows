@@ -1,0 +1,8 @@
+# Local credential backup
+credentials_backup.md
+
+# Google Client Secrets (OAuth credentials)
+client_secret_*.json
+
+# OS files
+.DS_Store

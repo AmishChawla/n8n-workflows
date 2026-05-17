@@ -1,0 +1,1109 @@
+{
+  "name": "AI SDR Reply Intelligence (Gemini)",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=YOUR_GEMINI_API_KEY",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"You are an AI intent classifier and meeting time extractor.\\n\\nCurrent date and time in Asia/Kolkata timezone (reference for calculations): {{ $now.setZone('Asia/Kolkata').toISO() }}\\nTimezone for all calculations and outputs: Asia/Kolkata\\n\\nYour job is to analyze a user message and return:\\n1. The user's intent\\n2. The time mentioned in natural language\\n3. The same time converted to ISO datetime if possible\\n\\nPossible intents:\\nBookMeeting\\nQuestionHandler\\nObjectionHandler\\n\\nRules:\\n- Always return valid JSON.\\n- Do NOT include explanations or extra text.\\n- Return only the JSON object.\\n- If no time is mentioned, set time_text and datetime to null.\\n- Use the provided current date as the reference when calculating relative times such as tomorrow, next week, or next Tuesday.\\n- All datetime values must be returned in Asia/Kolkata timezone.\\n- Datetime must use ISO 8601 format with the +05:30 offset.\\n- If the exact date cannot be determined, set datetime to null.\\n\\nOutput format:\\n{\\n  \\\"intent\\\": \\\"BookMeeting | QuestionHandler | ObjectionHandler\\\",\\n  \\\"time_text\\\": \\\"string or null\\\",\\n  \\\"datetime\\\": \\\"ISO 8601 Asia/Kolkata datetime or null\\\"\\n}\\n\\nIntent definitions:\\n\\nBookMeeting:\\nUser wants to schedule, confirm, or discuss a call OR mentions availability.\\n\\nQuestionHandler:\\nUser asks about services, pricing, process, or information.\\n\\nObjectionHandler:\\nUser expresses hesitation, rejection, concern, or lack of interest.\\n\\nExamples:\\n\\nUser: Can we schedule a call for next Tuesday?\\nOutput:\\n{\\n  \\\"intent\\\": \\\"BookMeeting\\\",\\n  \\\"time_text\\\": \\\"next Tuesday\\\",\\n  \\\"datetime\\\": null\\n}\\n\\nUser: Call me tomorrow at 3pm\\nOutput:\\n{\\n  \\\"intent\\\": \\\"BookMeeting\\\",\\n  \\\"time_text\\\": \\\"tomorrow 3pm\\\",\\n  \\\"datetime\\\": \\\"2026-03-09T15:00:00+05:30\\\"\\n}\\n\\nUser: Sure let's talk\\nOutput:\\n{\\n  \\\"intent\\\": \\\"BookMeeting\\\",\\n  \\\"time_text\\\": null,\\n  \\\"datetime\\\": null\\n}\\n\\nUser: I'm not free today, call tomorrow\\nOutput:\\n{\\n  \\\"intent\\\": \\\"BookMeeting\\\",\\n  \\\"time_text\\\": \\\"tomorrow\\\",\\n  \\\"datetime\\\": null\\n}\\n\\nUser: Can you tell me your pricing?\\nOutput:\\n{\\n  \\\"intent\\\": \\\"QuestionHandler\\\",\\n  \\\"time_text\\\": null,\\n  \\\"datetime\\\": null\\n}\\n\\nUser: That's too expensive\\nOutput:\\n{\\n  \\\"intent\\\": \\\"ObjectionHandler\\\",\\n  \\\"time_text\\\": null,\\n  \\\"datetime\\\": null\\n}\\n\\nNow analyze this user message:\\n{{ $('Cleaned Message').item.json.message }}\"\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 0,\n    \"response_mime_type\": \"application/json\"\n  }\n}",
+        "options": {}
+      },
+      "id": "b33f92da-e22f-4f3f-baa5-7ecaddf79545",
+      "name": "Classify Intent (Gemini)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -176,
+        -448
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=YOUR_GEMINI_API_KEY",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\" : {{ JSON.stringify($('Turn context into string').item.json.contents) }},\n  \"systemInstruction\": {\n    \"parts\": [\n      {\n        \"text\": \"You are an elite Sales Development Representative (SDR) for a premium content production agency called 'ABC TimePass Agency'. Your job is to reply to inbound leads, understand their needs, explain our services, and convert them into booking a discovery call.\\n\\nCOMMUNICATION STYLE:\\nBe extremely human, friendly, and professional. Never sound robotic. Emails must be short and concise (3–4 short paragraphs max). Always end with a clear call to action asking for a meeting.\\n\\nCALENDAR RULES:\\nTwo meeting slots will always be provided in the input. You MUST use those exact slots when suggesting a meeting. Never generate your own time slots.\\n\\nIDEAL CUSTOMERS:\\n• B2B SaaS companies\\n• D2C e-commerce brands\\n• Personal brands scaling past $50k/month\\n\\nCORE SERVICES:\\nFast-Track Retainer ($2,500/mo starting): 15 short-form videos + 4 LinkedIn ghostwritten posts monthly.\\n\\nFull-Scale Production ($5,000/mo starting): 4 long-form YouTube videos + editing + thumbnails + 20 short-form clips.\\n\\nAd Creative Studio ($3,500/project): 10 high-converting video ads optimized for Meta/TikTok.\\n\\nSALES RULES:\\nIf asked about pricing, only mention starting ranges and explain pricing depends on scope.\\n\\nRevisions: 2 rounds included.\\n\\nTurnaround time: 1 week strategy + 7 days for first deliverables.\\n\\nIf lead has no budget, politely explain our retainers start at $2,500/month and offer our Free DIY Content Framework Guide instead.\\n\\nFIRST EMAIL STRUCTURE:\\n1. Acknowledge what the lead said\\n2. Validate their problem\\n3. Mention the relevant service\\n4. Offer the two meeting slots\\n5. Ask them which time works\\n\\nOUTPUT RULES:\\nReturn ONLY the final email message. No explanations.\\nReturn ONLY the email body. Do NOT include Subject\"\n      }\n    ]\n  }\n}",
+        "options": {}
+      },
+      "id": "aa73449f-0988-42b2-b811-beecb72c3ab3",
+      "name": "Question Handler (Gemini)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        496,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "id": "fb2e65ee-a958-4151-a308-99e9cad226c8",
+      "name": "Gmail Trigger1",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1200,
+        -448
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zKgnDX0alIMkrhzU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.intent }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "BookMeeting"
+            },
+            {
+              "value2": "=QuestionHandler",
+              "output": 1
+            },
+            {
+              "value2": "ObjectionHandler",
+              "output": 1
+            }
+          ]
+        }
+      },
+      "id": "48529531-fc25-425b-a42c-b6a72cb799ee",
+      "name": "Intent Switch1",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        272,
+        -480
+      ]
+    },
+    {
+      "parameters": {
+        "calendar": "primary",
+        "start": "={{ $('Format Intent').item.json.datetime }}",
+        "end": "={{ DateTime.fromISO($('Format Intent').item.json.datetime).plus({ minutes: 30 }).toISO() }}",
+        "additionalFields": {
+          "attendees": [
+            "={{ $('Cleaned Message').item.json.from }}"
+          ],
+          "conferenceDataUi": {
+            "conferenceDataValues": {
+              "conferenceSolution": "hangoutsMeet"
+            }
+          },
+          "description": "=Discovery call with {{ $('Cleaned Message').item.json.from }}",
+          "guestsCanSeeOtherGuests": true,
+          "summary": "Discovery Call"
+        }
+      },
+      "id": "8903e832-bd66-45b6-acc5-3aded288747c",
+      "name": "Book Meeting1",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        -752
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "Y06qabaIGQvTtBat",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "reply",
+        "threadId": "={{ $('Cleaned Message').item.json.threadId }}",
+        "messageId": "={{ $('Cleaned Message').item.json.message_id }}",
+        "subject": "={{ $('Cleaned Message').item.json.subject }}",
+        "message": "={{ $json.mail }}",
+        "toList": [
+          "={{ $('Cleaned Message').item.json.from }}"
+        ],
+        "additionalFields": {}
+      },
+      "id": "4df08424-ade0-4962-a844-e522c42415d0",
+      "name": "Send Gmail1",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        944,
+        -160
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zKgnDX0alIMkrhzU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Cleaned Message').item.json.threadId }}",
+        "tableName": "messages",
+        "contextWindowLength": 7
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -688,
+        -224
+      ],
+      "id": "f70ada76-8a2c-4101-ad25-58fd4491d9a9",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "incHeEfSS9OAmmed",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "groupMessages": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "typeVersion": 1.1,
+      "position": [
+        -752,
+        -448
+      ],
+      "id": "306b4e08-6a70-475c-a2e3-510e21322e83",
+      "name": "Retrieve Context"
+    },
+    {
+      "parameters": {
+        "jsCode": "const messages = $input.all();\n\nconst contents = [];\n\nfor (const item of messages) {\n\n  const msg = item.json;\n\n  if (msg.human) {\n    contents.push({\n      role: \"user\",\n      parts: [{ text: msg.human }]\n    });\n  }\n\n  if (msg.ai) {\n    contents.push({\n      role: \"model\",\n      parts: [{ text: msg.ai }]\n    });\n  }\n\n}\n\nconst latestMessage=$('Cleaned Message').first().json.message;\n\ncontents.push({\n      role: \"user\",\n      parts: [{ text: latestMessage }]\n    });\n\nreturn [\n  {\n    json: {\n      contents\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        -448
+      ],
+      "id": "6433b304-52cf-4210-8b35-71449184d9c6",
+      "name": "Turn context into string"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n\n  const text = $input.first().json.text || \"\";\n\n  // Remove quoted previous emails (Gmail / Outlook / Apple Mail patterns)\n  const cleaned = text\n    .replace(/On\\s.+?wrote:[\\s\\S]*/gi, \"\")\n    .replace(/From:\\s.+[\\s\\S]*/gi, \"\")\n    .replace(/-----Original Message-----[\\s\\S]*/gi, \"\")\n    .replace(/>.+/g, \"\")\n    .trim();\n\n  return {\n    json: {\n      message_id: item.json.id,\n      threadId: item.json.threadId,\n      message: cleaned,\n      from: item.json.from?.value?.[0]?.address || \"\",\n      subject: item.json.subject\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -976,
+        -448
+      ],
+      "id": "88f62828-c6b5-4e7e-ab3f-51ce241c513a",
+      "name": "Cleaned Message"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "user",
+              "message": "={{ $('Cleaned Message').item.json.message }}"
+            },
+            {
+              "type": "ai",
+              "message": "={{ $('Final Mail to send').item.json.mail }}"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "typeVersion": 1.1,
+      "position": [
+        1392,
+        -160
+      ],
+      "id": "57d45e85-9f60-40fa-9ddf-e70bdd4b0640",
+      "name": "Chat Memory Manager"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d12dd624-c808-4a32-abfc-1b54672940af",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "07bce22a-b247-48d8-bafd-546373dcbb50",
+              "leftValue": "={{ $json.labelIds }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "array",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1168,
+        -160
+      ],
+      "id": "2faab4c5-3a84-474e-9e7e-f32d166935bc",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "const mail_to_send = $input.first().json.candidates[0].content.parts[0].text;\n\nreturn {mail: mail_to_send};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        -160
+      ],
+      "id": "65ac04c5-591f-4cd1-9fdf-607ce04c4d02",
+      "name": "Final Mail to send"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('If').item.json.threadId }}",
+        "tableName": "messages"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1472,
+        80
+      ],
+      "id": "d8d658ca-ddf6-4ea7-9834-16e25f0b8d75",
+      "name": "Postgres Chat Memory1",
+      "credentials": {
+        "postgres": {
+          "id": "incHeEfSS9OAmmed",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const responseText = $input.first().json.candidates[0].content.parts[0].text\n\nconst parsed = JSON.parse(responseText);\n\nreturn [\n  {\n    json: parsed\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        -448
+      ],
+      "id": "f089f9fd-27ab-423f-b59f-cd81271ad688",
+      "name": "Format Intent"
+    },
+    {
+      "parameters": {
+        "resource": "calendar",
+        "calendar": {
+          "__rl": true,
+          "value": "YOUR_EMAIL@gmail.com",
+          "mode": "list",
+          "cachedResultName": "YOUR_EMAIL@gmail.com"
+        },
+        "timeMin": "={{ $json.datetime }}",
+        "timeMax": "={{ DateTime.fromISO($json.datetime).plus({ minutes: 30 }).toISO() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        -704
+      ],
+      "id": "39a28b34-326e-43c8-82a7-bdff27a096ef",
+      "name": "Get availability in a calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "Y06qabaIGQvTtBat",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b5699538-2c9d-4c9e-84f6-11c7759dd15b",
+              "leftValue": "={{ $json.available }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        944,
+        -704
+      ],
+      "id": "c037fc22-51d8-4828-8d2d-a9d5a0186fed",
+      "name": "time slot availability"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "reply",
+        "threadId": "={{ $('Cleaned Message').item.json.threadId }}",
+        "messageId": "={{ $('Cleaned Message').item.json.message_id }}",
+        "subject": "={{ $('Cleaned Message').item.json.subject }}",
+        "message": "=Your meeting is confirmed.\n\nCalender Link:{{ $json.htmlLink }}\nMeeting Link:\n{{ $json.hangoutLink }}\nLooking forward to speaking with you.",
+        "toList": [
+          "={{ $('Cleaned Message').item.json.from }}"
+        ],
+        "additionalFields": {}
+      },
+      "id": "81412b3a-d251-4e76-b1f0-06b5ee041fc3",
+      "name": "Send Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        1744,
+        -752
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zKgnDX0alIMkrhzU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "user",
+              "message": "={{ $('Cleaned Message').item.json.message }}"
+            },
+            {
+              "type": "ai",
+              "message": "={{ $('Final Mail to send1').item.json.mail }}"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "typeVersion": 1.1,
+      "position": [
+        2192,
+        -848
+      ],
+      "id": "5e71cd89-f0b8-4076-95ba-a6c47487605d",
+      "name": "Chat Memory Manager1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d12dd624-c808-4a32-abfc-1b54672940af",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "07bce22a-b247-48d8-bafd-546373dcbb50",
+              "leftValue": "={{ $json.labelIds }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "array",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1968,
+        -752
+      ],
+      "id": "65c2b8e2-d6c0-410a-82fb-82200277f54f",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('If1').item.json.threadId }}",
+        "tableName": "messages"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        2272,
+        -624
+      ],
+      "id": "f2cb3105-f019-46b8-9946-b1c7f0a02ac5",
+      "name": "Postgres Chat Memory2",
+      "credentials": {
+        "postgres": {
+          "id": "incHeEfSS9OAmmed",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const event = $input.all();\n\nconst start = new Date($input.first().json.start.dateTime);\n\nconst date = start.toLocaleDateString('en-IN', {\n  day: 'numeric',\n  month: 'long',\n  year: 'numeric'\n});\n\nconst time = start.toLocaleTimeString('en-IN', {\n  hour: '2-digit',\n  minute: '2-digit'\n});\n\nconst meetLink = $input.first().json.hangoutLink || '';\n\nconst mail = `\nHi,\n\nYour meeting has been successfully scheduled.\n\n📅 Date: ${date}\n⏰ Time: ${time} IST\n\n🔗 Google Meet Link:\n${meetLink}\n\nPlease join the meeting using the link above at the scheduled time.\n\nLooking forward to speaking with you.\n\nBest regards,\nTeam\n`;\n\nreturn [\n  {\n    json: {\n      mail: mail\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1456,
+        -752
+      ],
+      "id": "5e7e6231-5ede-49d9-9c28-43eec31a53e2",
+      "name": "Final Mail to send1"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "YOUR_EMAIL@gmail.com",
+          "mode": "list",
+          "cachedResultName": "YOUR_EMAIL@gmail.com"
+        },
+        "options": {
+          "timeZone": {
+            "__rl": true,
+            "value": "Asia/Kolkata",
+            "mode": "list",
+            "cachedResultName": "Asia/Kolkata"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1168,
+        -448
+      ],
+      "id": "c8dca5a1-5747-4bda-9aa7-b9b2843e268f",
+      "name": "Get many events",
+      "executeOnce": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "Y06qabaIGQvTtBat",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Lead details\nconst lead = items[0].json;\n\n// Calendar events\nconst events = items.slice(1).map(i => i.json);\n\nconst startHour = 9;\nconst endHour = 18;\nconst slotDuration = 30;\n\nconst busySlots = events.map(event => ({\n  start: new Date(event.start.dateTime),\n  end: new Date(event.end.dateTime)\n}));\n\nfunction isBusy(start, end) {\n  return busySlots.some(b =>\n    start < b.end && end > b.start\n  );\n}\n\nlet today = new Date();\nlet candidateSlots = [];\n\n// Check next 5 days (skip today)\nfor (let d = 1; d <= 5; d++) {\n\n  let day = new Date();\n  day.setDate(today.getDate() + d);\n  day.setHours(0,0,0,0);\n\n  for (let hour = startHour; hour < endHour; hour++) {\n\n    for (let min = 0; min < 60; min += slotDuration) {\n\n      let slotStart = new Date(day);\n      slotStart.setHours(hour, min, 0);\n\n      let slotEnd = new Date(slotStart);\n      slotEnd.setMinutes(slotStart.getMinutes() + slotDuration);\n\n      if (!isBusy(slotStart, slotEnd)) {\n\n        candidateSlots.push({\n          date: d,\n          formatted: slotStart.toLocaleString(\"en-IN\", {\n            dateStyle: \"medium\",\n            timeStyle: \"short\"\n          })\n        });\n\n      }\n\n    }\n  }\n}\n\n// Shuffle slots\ncandidateSlots.sort(() => Math.random() - 0.5);\n\n// Pick 2 slots from different days\nlet selected = [];\nlet usedDays = new Set();\n\nfor (let slot of candidateSlots) {\n  if (!usedDays.has(slot.date)) {\n    selected.push(slot.formatted);\n    usedDays.add(slot.date);\n  }\n  if (selected.length === 2) break;\n}\n\nreturn [{\n  json: {\n    name: lead.Name,\n    email: lead.Email,\n    mobile: lead.Mobile,\n    message: lead.Message,\n    available_slots: selected\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1456,
+        -448
+      ],
+      "id": "8f48c927-c215-4ba1-b688-dff794614f40",
+      "name": "Find available slots"
+    },
+    {
+      "parameters": {
+        "jsCode": "const slot1 = $input.first().json.available_slots[0];\nconst slot2 = $input.first().json.available_slots[1];\n\nconst mail = `\nHi,\n\nThe time you requested is unfortunately not available.\n\nHowever, here are two available slots:\n\n1️⃣ ${slot1}  \n2️⃣ ${slot2}\n\nPlease reply whichever slot works for you, and I will schedule the meeting for you right away.\n\nLooking forward to speaking with you.\n\nBest regards,\nTeam\n`;\n\nreturn [\n  {\n    json: {\n      mail: mail\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1744,
+        -448
+      ],
+      "id": "30b3d081-6f09-4c3c-857c-ea7aaf070b1b",
+      "name": "Final Mail to send2"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "reply",
+        "threadId": "={{ $('Cleaned Message').item.json.threadId }}",
+        "messageId": "={{ $('Cleaned Message').item.json.message_id }}",
+        "subject": "={{ $('Cleaned Message').item.json.subject }}",
+        "message": "={{ $json.mail }}",
+        "toList": [
+          "={{ $('Cleaned Message').item.json.from }}"
+        ],
+        "additionalFields": {}
+      },
+      "id": "66b8fdba-3931-4d58-865a-0e2a7e270ae5",
+      "name": "Send Gmail2",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        1968,
+        -448
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zKgnDX0alIMkrhzU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "user",
+              "message": "={{ $('Cleaned Message').item.json.message }}"
+            },
+            {
+              "type": "ai",
+              "message": "={{ $('Final Mail to send2').item.json.mail }}"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "typeVersion": 1.1,
+      "position": [
+        2544,
+        -448
+      ],
+      "id": "2a421f20-a48a-48e1-9a6e-dd2fcde8e34d",
+      "name": "Chat Memory Manager2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d12dd624-c808-4a32-abfc-1b54672940af",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "07bce22a-b247-48d8-bafd-546373dcbb50",
+              "leftValue": "={{ $json.labelIds }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "array",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2256,
+        -448
+      ],
+      "id": "b8b0ea2e-649d-41dc-887d-6a21e7a328fa",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('If2').item.json.threadId }}",
+        "tableName": "messages"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        2624,
+        -224
+      ],
+      "id": "75708ecd-16f5-4d9e-ae9b-6ad6c49530d0",
+      "name": "Postgres Chat Memory3",
+      "credentials": {
+        "postgres": {
+          "id": "incHeEfSS9OAmmed",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b5699538-2c9d-4c9e-84f6-11c7759dd15b",
+              "leftValue": "={{ $json.datetime }}",
+              "rightValue": true,
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "abb7541e-b28f-451f-bb54-d76d4b9ff596",
+              "leftValue": "={{ $json.intent }}",
+              "rightValue": "BookMeeting",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        496,
+        -592
+      ],
+      "id": "0b8fc93e-ed51-4ff1-822d-5295c016ab88",
+      "name": "time slot availability1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Classify Intent (Gemini)": {
+      "main": [
+        [
+          {
+            "node": "Format Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Question Handler (Gemini)": {
+      "main": [
+        [
+          {
+            "node": "Final Mail to send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Cleaned Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Switch1": {
+      "main": [
+        [
+          {
+            "node": "time slot availability1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Question Handler (Gemini)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Retrieve Context",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve Context": {
+      "main": [
+        [
+          {
+            "node": "Turn context into string",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Turn context into string": {
+      "main": [
+        [
+          {
+            "node": "Classify Intent (Gemini)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleaned Message": {
+      "main": [
+        [
+          {
+            "node": "Retrieve Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Gmail1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Chat Memory Manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Mail to send": {
+      "main": [
+        [
+          {
+            "node": "Send Gmail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Chat Memory Manager",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Intent": {
+      "main": [
+        [
+          {
+            "node": "Intent Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get availability in a calendar": {
+      "main": [
+        [
+          {
+            "node": "time slot availability",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "time slot availability": {
+      "main": [
+        [
+          {
+            "node": "Book Meeting1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get many events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Book Meeting1": {
+      "main": [
+        [
+          {
+            "node": "Final Mail to send1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Gmail": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Chat Memory Manager1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "Chat Memory Manager1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Mail to send1": {
+      "main": [
+        [
+          {
+            "node": "Send Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events": {
+      "main": [
+        [
+          {
+            "node": "Find available slots",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find available slots": {
+      "main": [
+        [
+          {
+            "node": "Final Mail to send2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Mail to send2": {
+      "main": [
+        [
+          {
+            "node": "Send Gmail2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Chat Memory Manager2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory3": {
+      "ai_memory": [
+        [
+          {
+            "node": "Chat Memory Manager2",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Gmail2": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "time slot availability1": {
+      "main": [
+        [
+          {
+            "node": "Get availability in a calendar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get many events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "462e4d21-8d0b-434f-8e41-1ab858292857",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "912e3ec0d208498715a9ba8787509f22ad62907dbbfd073727dbab24d34518e2"
+  },
+  "id": "MUIIbVVW9sodqLzo",
+  "tags": []
+}
